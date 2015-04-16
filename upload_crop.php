@@ -20,6 +20,8 @@
 */
 error_reporting (E_ALL ^ E_NOTICE);
 session_start(); //Do not remove this
+require_once 'class.image.php';
+
 //only assign a new timestamp if the session variable is empty
 if (!isset($_SESSION['random_key']) || strlen($_SESSION['random_key'])==0){
     $_SESSION['random_key'] = strtotime(date('Y-m-d H:i:s')); //assign the timestamp to the session variable
@@ -32,15 +34,19 @@ if (!isset($_SESSION['random_key']) || strlen($_SESSION['random_key'])==0){
 $upload_dir = "upload_pic"; 				// The directory for the images to be saved in
 $upload_path = $upload_dir."/";				// The path to where the image will be saved
 $large_image_prefix = "resize_"; 			// The prefix name to large image
-$thumb_image_prefix = "bulut_";			// The prefix name to the thumb image
+$thumb_image_prefix = "thumbnail_";			// The prefix name to the thumb image
 $large_image_name = $large_image_prefix.$_SESSION['random_key'];     // New name of the large image (append the timestamp to the filename)
 $thumb_image_name = $thumb_image_prefix.$_SESSION['random_key'];     // New name of the thumbnail image (append the timestamp to the filename)
-$max_file = "3"; 							// Maximum file size in MB
+$max_file = "2"; 							// Maximum file size in MB
 $max_width = "500";							// Max width allowed for the large image
-$thumb_width = "100";						// Width of thumbnail image
-$thumb_height = "100";						// Height of thumbnail image
+$thumb_width = "400";						// Width of thumbnail image
+$thumb_height = "400";						// Height of thumbnail image
+$thumb_width2 = "200";						// Width of thumbnail image
+$thumb_height2 = "200";						// Height of thumbnail image
+$thumb_width3 = "100";						// Width of thumbnail image
+$thumb_height3 = "100";						// Height of thumbnail image
 // Only one of these image types should be allowed for upload
-$allowed_image_types = array('image/pjpeg'=>"jpg",'image/jpeg'=>"jpg",'image/jpg'=>"jpg",'image/png'=>"png",'image/x-png'=>"png",'image/gif'=>"gif");
+$allowed_image_types = array('image/pjpeg'=>"jpg",'image/jpeg'=>"jpeg",'image/jpeg'=>"jpg",'image/jpg'=>"jpg",'image/png'=>"png",'image/x-png'=>"png");
 $allowed_image_ext = array_unique($allowed_image_types); // do not change this
 $image_ext = "";	// initialise variable, do not change this.
 foreach ($allowed_image_ext as $mime_type => $ext) {
@@ -75,9 +81,6 @@ function resizeImage($image,$width,$height,$scale) {
 	imagecopyresampled($newImage,$source,0,0,0,0,$newImageWidth,$newImageHeight,$width,$height);
 	
 	switch($imageType) {
-		case "image/gif":
-	  		imagegif($newImage,$image); 
-			break;
       	case "image/pjpeg":
 		case "image/jpeg":
 		case "image/jpg":
@@ -101,9 +104,6 @@ function resizeThumbnailImage($thumb_image_name, $image, $width, $height, $start
 	$newImageHeight = ceil($height * $scale);
 	$newImage = imagecreatetruecolor($newImageWidth,$newImageHeight);
 	switch($imageType) {
-		case "image/gif":
-			$source=imagecreatefromgif($image); 
-			break;
 	    case "image/pjpeg":
 		case "image/jpeg":
 		case "image/jpg":
@@ -116,9 +116,6 @@ function resizeThumbnailImage($thumb_image_name, $image, $width, $height, $start
   	}
 	imagecopyresampled($newImage,$source,0,0,$start_width,$start_height,$newImageWidth,$newImageHeight,$width,$height);
 	switch($imageType) {
-		case "image/gif":
-	  		imagegif($newImage,$thumb_image_name); 
-			break;
       	case "image/pjpeg":
 		case "image/jpeg":
 		case "image/jpg":
@@ -187,16 +184,16 @@ if (isset($_POST["upload"])) {
 				$error = "";
 				break;
 			}else{
-				$error = "Yalnızca  <strong>".$image_ext."</strong> bu uzantılar kabul edilir.<br />";
+				$error = "Only <strong>".$image_ext."</strong> images accepted for upload<br />";
 			}
 		}
 		//check if the file size is above the allowed limit
 		if ($userfile_size > ($max_file*1048576)) {
-			$error.= "Resim Boyutu Çok Büyük.. ".$max_file."MB in size";
+			$error.= "Images must be under ".$max_file."MB in size";
 		}
 		
 	}else{
-		$error= "Yüklemek için Resim Seçin..";
+		$error= "Select an image for upload";
 	}
 	//Everything is ok, so we can upload the image.
 	if (strlen($error)==0){
@@ -241,9 +238,16 @@ if (isset($_POST["upload_thumbnail"]) && strlen($large_photo_exists)>0) {
 	$y2 = $_POST["y2"];
 	$w = $_POST["w"];
 	$h = $_POST["h"];
+	
+	var_dump($_POST);
 	//Scale the image to the thumb_width set above
 	$scale = $thumb_width/$w;
 	$cropped = resizeThumbnailImage($thumb_image_location, $large_image_location,$w,$h,$x1,$y1,$scale);
+
+	$cropped = resizeThumbnailImage($upload_path.$thumb_image_name."_".$thumb_width2.$_SESSION['user_file_ext'], $large_image_location,$w,$h,$x1,$y1,$scale/($thumb_width/$thumb_width2));
+	
+	$cropped = resizeThumbnailImage($upload_path.$thumb_image_name."_".$thumb_width3.$_SESSION['user_file_ext'], $large_image_location,$w,$h,$x1,$y1,$scale/($thumb_width/$thumb_width3));
+	
 	//Reload the page again to view the thumbnail
 	header("location:".$_SERVER["PHP_SELF"]);
 	exit();
@@ -293,7 +297,9 @@ if ($_GET['a']=="delete" && strlen($_GET['t'])>0){
 * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 -->
-
+<ul>
+	<li><a href="http://www.webmotionuk.com/php-jquery-image-upload-and-crop/">Back to project page & download</a></li>
+</ul>
 <?php
 //Only display the javacript if an image has been uploaded
 if(strlen($large_photo_exists)>0){
@@ -327,7 +333,7 @@ $(document).ready(function () {
 		var w = $('#w').val();
 		var h = $('#h').val();
 		if(x1=="" || y1=="" || x2=="" || y2=="" || w=="" || h==""){
-			alert("Ufak resim için seçim yapın..");
+			alert("You must make a selection first");
 			return false;
 		}else{
 			return true;
@@ -341,22 +347,22 @@ $(window).load(function () {
 
 </script>
 <?php }?>
-<h1>Logo Boyutlandırma ve Kırpma</h1>
+<h1>Photo Upload and Crop</h1>
 <?php
 //Display error message if there are any
 if(strlen($error)>0){
-	echo "<ul><li><strong>HATA!</strong></li><li>".$error."</li></ul>";
+	echo "<ul><li><strong>Error!</strong></li><li>".$error."</li></ul>";
 }
 if(strlen($large_photo_exists)>0 && strlen($thumb_photo_exists)>0){
 	echo $large_photo_exists."&nbsp;".$thumb_photo_exists;
-	echo "<p><a href=\"".$_SERVER["PHP_SELF"]."?a=delete&t=".$_SESSION['random_key'].$_SESSION['user_file_ext']."\">Resmi Sil</a></p>";
-	echo "<p><a href=\"".$_SERVER["PHP_SELF"]."\">Yeni Resim Yükle</a></p>";
+	echo "<p><a href=\"".$_SERVER["PHP_SELF"]."?a=delete&t=".$_SESSION['random_key'].$_SESSION['user_file_ext']."\">Delete images</a></p>";
+	echo "<p><a href=\"".$_SERVER["PHP_SELF"]."\">Upload another</a></p>";
 	//Clear the time stamp session and user file extension
 	$_SESSION['random_key']= "";
 	$_SESSION['user_file_ext']= "";
 }else{
 		if(strlen($large_photo_exists)>0){?>
-		<h2>Küçük Resim Oluştur</h2>
+		<h2>Create Thumbnail</h2>
 		<div align="center">
 			<img src="<?php echo $upload_path.$large_image_name.$_SESSION['user_file_ext'];?>" style="float: left; margin-right: 10px;" id="thumbnail" alt="Create Thumbnail" />
 			<div style="border:1px #e5e5e5 solid; float:left; position:relative; overflow:hidden; width:<?php echo $thumb_width;?>px; height:<?php echo $thumb_height;?>px;">
@@ -370,14 +376,14 @@ if(strlen($large_photo_exists)>0 && strlen($thumb_photo_exists)>0){
 				<input type="hidden" name="y2" value="" id="y2" />
 				<input type="hidden" name="w" value="" id="w" />
 				<input type="hidden" name="h" value="" id="h" />
-				<input type="submit" name="upload_thumbnail" value="Küçük Resim Kaydet" id="save_thumb" />
+				<input type="submit" name="upload_thumbnail" value="Save Thumbnail" id="save_thumb" />
 			</form>
 		</div>
 	<hr />
 	<?php 	} ?>
-	<h2>Resim Yükle</h2>
+	<h2>Upload Photo</h2>
 	<form name="photo" enctype="multipart/form-data" action="<?php echo $_SERVER["PHP_SELF"];?>" method="post">
-	Resim <input type="file" name="image" size="30" /> <input type="submit" name="upload" value="Yükle" />
+	Photo <input type="file" name="image" size="30" /> <input type="submit" name="upload" value="Upload" />
 	</form>
 <?php } ?>
 <!-- Copyright (c) 2008 http://www.webmotionuk.com -->
