@@ -1,4 +1,11 @@
 <?php
+
+/**
+ * $_SESSION["sirketId"] değeri,
+ * UPLOAD_DIR sabiti,
+ * id_encode fonksiyonu bu dosyaya çağırılmak zorunda!!!
+ */
+
 /*
 * Copyright (c) 2008 http://www.webmotionuk.com / http://www.webmotionuk.co.uk
 * "PHP & Jquery image upload & crop"
@@ -23,17 +30,17 @@ session_start(); //Do not remove this
 
 //only assign a new timestamp if the session variable is empty
 if (!isset($_SESSION['random_key']) || strlen($_SESSION['random_key'])==0){
-    $_SESSION['random_key'] = strtotime(date('Y-m-d H:i:s')); //assign the timestamp to the session variable
+    $_SESSION['random_key'] = date("YmdHis"); //assign the timestamp to the session variable
 	$_SESSION['user_file_ext']= "";
 }
 #########################################################################################################
 # CONSTANTS																								#
 # You can alter the options below																		#
 #########################################################################################################
-$upload_dir = "upload_pic"; 				// The directory for the images to be saved in
+$upload_dir = UPLOAD_DIR . "/" . date("Y-m"); 				// The directory for the images to be saved in
 $upload_path = $upload_dir."/";				// The path to where the image will be saved
-$large_image_prefix = "resize_"; 			// The prefix name to large image
-$thumb_image_prefix = "thumbnail_";			// The prefix name to the thumb image
+$large_image_prefix = idEncode($_SESSION["sirketId"]) . "_"; 			// The prefix name to large image
+$thumb_image_prefix = idEncode($_SESSION["sirketId"]) . "_";			// The prefix name to the thumb image
 $large_image_name = $large_image_prefix.$_SESSION['random_key'];     // New name of the large image (append the timestamp to the filename)
 $thumb_image_name = $thumb_image_prefix.$_SESSION['random_key'];     // New name of the thumbnail image (append the timestamp to the filename)
 $max_file = "2"; 							// Maximum file size in MB
@@ -52,6 +59,9 @@ foreach ($allowed_image_ext as $mime_type => $ext) {
     $image_ext.= strtoupper($ext)." ";
 }
 
+if (! file_exists($upload_path)) {
+	mkdir($upload_path, 0777, true);
+}
 
 ##########################################################################################################
 # IMAGE FUNCTIONS																						 #
@@ -65,32 +75,32 @@ function resizeImage($image,$width,$height,$scale) {
 	$newImage = imagecreatetruecolor($newImageWidth,$newImageHeight);
 	switch($imageType) {
 		case "image/gif":
-			$source=imagecreatefromgif($image); 
+			$source=imagecreatefromgif($image);
 			break;
 	    case "image/pjpeg":
 		case "image/jpeg":
 		case "image/jpg":
-			$source=imagecreatefromjpeg($image); 
+			$source=imagecreatefromjpeg($image);
 			break;
 	    case "image/png":
 		case "image/x-png":
-			$source=imagecreatefrompng($image); 
+			$source=imagecreatefrompng($image);
 			break;
   	}
 	imagecopyresampled($newImage,$source,0,0,0,0,$newImageWidth,$newImageHeight,$width,$height);
-	
+
 	switch($imageType) {
       	case "image/pjpeg":
 		case "image/jpeg":
 		case "image/jpg":
-	  		imagejpeg($newImage,$image,90); 
+	  		imagejpeg($newImage,$image,90);
 			break;
 		case "image/png":
 		case "image/x-png":
-			imagepng($newImage,$image);  
+			imagepng($newImage,$image);
 			break;
     }
-	
+
 	chmod($image, 0777);
 	return $image;
 }
@@ -98,7 +108,7 @@ function resizeImage($image,$width,$height,$scale) {
 function resizeThumbnailImage($thumb_image_name, $image, $width, $height, $start_width, $start_height, $scale){
 	list($imagewidth, $imageheight, $imageType) = getimagesize($image);
 	$imageType = image_type_to_mime_type($imageType);
-	
+
 	$newImageWidth = ceil($width * $scale);
 	$newImageHeight = ceil($height * $scale);
 	$newImage = imagecreatetruecolor($newImageWidth,$newImageHeight);
@@ -106,11 +116,11 @@ function resizeThumbnailImage($thumb_image_name, $image, $width, $height, $start
 	    case "image/pjpeg":
 		case "image/jpeg":
 		case "image/jpg":
-			$source=imagecreatefromjpeg($image); 
+			$source=imagecreatefromjpeg($image);
 			break;
 	    case "image/png":
 		case "image/x-png":
-			$source=imagecreatefrompng($image); 
+			$source=imagecreatefrompng($image);
 			break;
   	}
 	imagecopyresampled($newImage,$source,0,0,$start_width,$start_height,$newImageWidth,$newImageHeight,$width,$height);
@@ -118,11 +128,11 @@ function resizeThumbnailImage($thumb_image_name, $image, $width, $height, $start
       	case "image/pjpeg":
 		case "image/jpeg":
 		case "image/jpg":
-	  		imagejpeg($newImage,$thumb_image_name,90); 
+	  		imagejpeg($newImage,$thumb_image_name,90);
 			break;
 		case "image/png":
 		case "image/x-png":
-			imagepng($newImage,$thumb_image_name);  
+			imagepng($newImage,$thumb_image_name);
 			break;
     }
 	chmod($thumb_image_name, 0777);
@@ -143,7 +153,7 @@ function getWidth($image) {
 
 //Image Locations
 $large_image_location = $upload_path.$large_image_name.$_SESSION['user_file_ext'];
-$thumb_image_location = $upload_path.$thumb_image_name.$_SESSION['user_file_ext'];
+$thumb_image_location = $upload_path.$thumb_image_name."_".$thumb_width.$_SESSION['user_file_ext'];
 
 //Create the upload directory with the right permissions if it doesn't exist
 if(!is_dir($upload_dir)){
@@ -154,7 +164,7 @@ if(!is_dir($upload_dir)){
 //Check to see if any images with the same name already exist
 if (file_exists($large_image_location)){
 	if(file_exists($thumb_image_location)){
-		$thumb_photo_exists = "<img src=\"".$upload_path.$thumb_image_name.$_SESSION['user_file_ext']."\" alt=\"Thumbnail Image\"/>";
+		$thumb_photo_exists = "<img src=\"".$upload_path.$thumb_image_name."_".$thumb_width.$_SESSION['user_file_ext']."\" alt=\"Thumbnail Image\"/>";
 	}else{
 		$thumb_photo_exists = "";
 	}
@@ -164,7 +174,7 @@ if (file_exists($large_image_location)){
 	$thumb_photo_exists = "";
 }
 
-if (isset($_POST["upload"])) { 
+if (isset($_POST["upload"])) {
 	//Get the file information
 	$userfile_name = $_FILES['image']['name'];
 	$userfile_tmp = $_FILES['image']['tmp_name'];
@@ -172,10 +182,10 @@ if (isset($_POST["upload"])) {
 	$userfile_type = $_FILES['image']['type'];
 	$filename = basename($_FILES['image']['name']);
 	$file_ext = strtolower(substr($filename, strrpos($filename, '.') + 1));
-	
+
 	//Only process if the file is a JPG, PNG or GIF and below the allowed limit
 	if((!empty($_FILES["image"])) && ($_FILES['image']['error'] == 0)) {
-		
+
 		foreach ($allowed_image_types as $mime_type => $ext) {
 			//loop through the specified image types and if they match the extension then break out
 			//everything is ok so go and check file size
@@ -190,24 +200,24 @@ if (isset($_POST["upload"])) {
 		if ($userfile_size > ($max_file*1048576)) {
 			$error.= "Images must be under ".$max_file."MB in size";
 		}
-		
+
 	}else{
 		$error= "Select an image for upload";
 	}
 	//Everything is ok, so we can upload the image.
 	if (strlen($error)==0){
-		
+
 		if (isset($_FILES['image']['name'])){
 			//this file could now has an unknown file extension (we hope it's one of the ones set above!)
 			$large_image_location = $large_image_location.".".$file_ext;
 			$thumb_image_location = $thumb_image_location.".".$file_ext;
-			
+
 			//put the file ext in the session so we know what file to look for once its uploaded
 			$_SESSION['user_file_ext']=".".$file_ext;
-			
+
 			move_uploaded_file($userfile_tmp, $large_image_location);
 			chmod($large_image_location, 0777);
-			
+
 			$width = getWidth($large_image_location);
 			$height = getHeight($large_image_location);
 			//Scale the image if it is greater than the width set above
@@ -237,40 +247,51 @@ if (isset($_POST["upload_thumbnail"]) && strlen($large_photo_exists)>0) {
 	$y2 = $_POST["y2"];
 	$w = $_POST["w"];
 	$h = $_POST["h"];
-	
+
 	var_dump($_POST);
 	//Scale the image to the thumb_width set above
 	$scale = $thumb_width/$w;
-	$cropped = resizeThumbnailImage($thumb_image_location, $large_image_location,$w,$h,$x1,$y1,$scale);
+	$cropped = resizeThumbnailImage($upload_path.$thumb_image_name."_".$thumb_width.$_SESSION['user_file_ext'], $large_image_location,$w,$h,$x1,$y1,$scale);
 
 	$cropped = resizeThumbnailImage($upload_path.$thumb_image_name."_".$thumb_width2.$_SESSION['user_file_ext'], $large_image_location,$w,$h,$x1,$y1,$scale/($thumb_width/$thumb_width2));
-	
+
 	$cropped = resizeThumbnailImage($upload_path.$thumb_image_name."_".$thumb_width3.$_SESSION['user_file_ext'], $large_image_location,$w,$h,$x1,$y1,$scale/($thumb_width/$thumb_width3));
-	
+
 	//Reload the page again to view the thumbnail
 	header("location:".$_SERVER["PHP_SELF"]);
 	exit();
 }
 
 
-if ($_GET['a']=="delete" && strlen($_GET['t'])>0){
+if ($_GET['a']=="delete" && strlen($_GET['t'])>0 && strlen($_GET['e'])>0 ){
 //get the file locations 
-	$large_image_location = $upload_path.$large_image_prefix.$_GET['t'];
-	$thumb_image_location = $upload_path.$thumb_image_prefix.$_GET['t'];
+	$large_image_location = $upload_path.$large_image_prefix.$_GET['t'].$_GET['e'];
+	$thumb_image_location = $upload_path.$thumb_image_prefix.$_GET['t']."_".$thumb_width.$_GET['e'];
+	$thumb_image_location2 = $upload_path.$thumb_image_prefix.$_GET['t']."_".$thumb_width2.$_GET['e'];
+	$thumb_image_location3 = $upload_path.$thumb_image_prefix.$_GET['t']."_".$thumb_width3.$_GET['e'];
+	echo $thumb_image_location3;
 	if (file_exists($large_image_location)) {
 		unlink($large_image_location);
 	}
 	if (file_exists($thumb_image_location)) {
 		unlink($thumb_image_location);
 	}
+<<<<<<< HEAD
+	if (file_exists($thumb_image_location2)) {
+		unlink($thumb_image_location2);
+	}
+	if (file_exists($thumb_image_location3)) {
+		unlink($thumb_image_location3);
+=======
 	if (file_exists($upload_path.$thumb_image_name."_".$thumb_width2.$_SESSION['user_file_ext'])) {
 		unlink($upload_path.$thumb_image_name."_".$thumb_width2.$_SESSION['user_file_ext']);
 	}
 	if (file_exists($upload_path.$thumb_image_name."_".$thumb_width3.$_SESSION['user_file_ext'])) {
 		unlink($upload_path.$thumb_image_name."_".$thumb_width3.$_SESSION['user_file_ext']);
+>>>>>>> master
 	}
 	header("location:".$_SERVER["PHP_SELF"]);
-	exit(); 
+	exit();
 }
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -311,15 +332,15 @@ if(strlen($large_photo_exists)>0){
 	$current_large_image_width = getWidth($large_image_location);
 	$current_large_image_height = getHeight($large_image_location);?>
 <script type="text/javascript">
-function preview(img, selection) { 
-	var scaleX = <?php echo $thumb_width;?> / selection.width; 
-	var scaleY = <?php echo $thumb_height;?> / selection.height; 
-	
-	$('#thumbnail + div > img').css({ 
-		width: Math.round(scaleX * <?php echo $current_large_image_width;?>) + 'px', 
+function preview(img, selection) {
+	var scaleX = <?php echo $thumb_width;?> / selection.width;
+	var scaleY = <?php echo $thumb_height;?> / selection.height;
+
+	$('#thumbnail + div > img').css({
+		width: Math.round(scaleX * <?php echo $current_large_image_width;?>) + 'px',
 		height: Math.round(scaleY * <?php echo $current_large_image_height;?>) + 'px',
-		marginLeft: '-' + Math.round(scaleX * selection.x1) + 'px', 
-		marginTop: '-' + Math.round(scaleY * selection.y1) + 'px' 
+		marginLeft: '-' + Math.round(scaleX * selection.x1) + 'px',
+		marginTop: '-' + Math.round(scaleY * selection.y1) + 'px'
 	});
 	$('#x1').val(selection.x1);
 	$('#y1').val(selection.y1);
@@ -327,9 +348,9 @@ function preview(img, selection) {
 	$('#y2').val(selection.y2);
 	$('#w').val(selection.width);
 	$('#h').val(selection.height);
-} 
+}
 
-$(document).ready(function () { 
+$(document).ready(function () {
 	$('#save_thumb').click(function() {
 		var x1 = $('#x1').val();
 		var y1 = $('#y1').val();
@@ -344,10 +365,10 @@ $(document).ready(function () {
 			return true;
 		}
 	});
-}); 
+});
 
-$(window).load(function () { 
-	$('#thumbnail').imgAreaSelect({ aspectRatio: '1:<?php echo $thumb_height/$thumb_width;?>', onSelectChange: preview }); 
+$(window).load(function () {
+	$('#thumbnail').imgAreaSelect({ aspectRatio: '1:<?php echo $thumb_height/$thumb_width;?>', onSelectChange: preview });
 });
 
 </script>
@@ -360,7 +381,7 @@ if(strlen($error)>0){
 }
 if(strlen($large_photo_exists)>0 && strlen($thumb_photo_exists)>0){
 	echo $large_photo_exists."&nbsp;".$thumb_photo_exists;
-	echo "<p><a href=\"".$_SERVER["PHP_SELF"]."?a=delete&t=".$_SESSION['random_key'].$_SESSION['user_file_ext']."\">Delete images</a></p>";
+	echo "<p><a href=\"".$_SERVER["PHP_SELF"]."?a=delete&t=".$_SESSION['random_key']."&e=".$_SESSION['user_file_ext']."\">Delete images</a></p>";
 	echo "<p><a href=\"".$_SERVER["PHP_SELF"]."\">Upload another</a></p>";
 	//Clear the time stamp session and user file extension
 	$_SESSION['random_key']= "";
