@@ -263,6 +263,12 @@ if ($_GET['a']=="delete" && strlen($_GET['t'])>0){
 	if (file_exists($thumb_image_location)) {
 		unlink($thumb_image_location);
 	}
+	if (file_exists($upload_path.$thumb_image_name."_".$thumb_width2.$_SESSION['user_file_ext'])) {
+		unlink($upload_path.$thumb_image_name."_".$thumb_width2.$_SESSION['user_file_ext']);
+	}
+	if (file_exists($upload_path.$thumb_image_name."_".$thumb_width3.$_SESSION['user_file_ext'])) {
+		unlink($upload_path.$thumb_image_name."_".$thumb_width3.$_SESSION['user_file_ext']);
+	}
 	header("location:".$_SERVER["PHP_SELF"]);
 	exit(); 
 }
