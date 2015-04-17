@@ -1,6 +1,6 @@
 <?php
 
-/**
+/*
  * $_SESSION["sirketId"] değeri,
  * UPLOAD_DIR sabiti,
  * id_encode fonksiyonu bu dosyaya çağırılmak zorunda!!!
