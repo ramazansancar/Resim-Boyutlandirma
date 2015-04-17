@@ -33,6 +33,24 @@ if (!isset($_SESSION['random_key']) || strlen($_SESSION['random_key'])==0){
     $_SESSION['random_key'] = date("YmdHis"); //assign the timestamp to the session variable
 	$_SESSION['user_file_ext']= "";
 }
+
+/********************************************BURASI SİLİNECEK*******************************************/
+
+function idEncode($id)
+{
+	// Base64 ile ID encode işlemi.
+	$enc = base64_encode($id);
+
+	return $enc;
+}
+
+define("UPLOAD_DIR","upload");
+
+$_SESSION["sirketId"] = 1;
+
+/*******************************************************************************************************/
+
+
 #########################################################################################################
 # CONSTANTS																								#
 # You can alter the options below																		#
@@ -269,27 +287,21 @@ if ($_GET['a']=="delete" && strlen($_GET['t'])>0 && strlen($_GET['e'])>0 ){
 	$thumb_image_location = $upload_path.$thumb_image_prefix.$_GET['t']."_".$thumb_width.$_GET['e'];
 	$thumb_image_location2 = $upload_path.$thumb_image_prefix.$_GET['t']."_".$thumb_width2.$_GET['e'];
 	$thumb_image_location3 = $upload_path.$thumb_image_prefix.$_GET['t']."_".$thumb_width3.$_GET['e'];
-	echo $thumb_image_location3;
+
 	if (file_exists($large_image_location)) {
 		unlink($large_image_location);
 	}
 	if (file_exists($thumb_image_location)) {
 		unlink($thumb_image_location);
 	}
-<<<<<<< HEAD
+
 	if (file_exists($thumb_image_location2)) {
 		unlink($thumb_image_location2);
 	}
 	if (file_exists($thumb_image_location3)) {
 		unlink($thumb_image_location3);
-=======
-	if (file_exists($upload_path.$thumb_image_name."_".$thumb_width2.$_SESSION['user_file_ext'])) {
-		unlink($upload_path.$thumb_image_name."_".$thumb_width2.$_SESSION['user_file_ext']);
 	}
-	if (file_exists($upload_path.$thumb_image_name."_".$thumb_width3.$_SESSION['user_file_ext'])) {
-		unlink($upload_path.$thumb_image_name."_".$thumb_width3.$_SESSION['user_file_ext']);
->>>>>>> master
-	}
+
 	header("location:".$_SERVER["PHP_SELF"]);
 	exit();
 }
