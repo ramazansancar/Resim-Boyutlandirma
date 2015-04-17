@@ -20,7 +20,6 @@
 */
 error_reporting (E_ALL ^ E_NOTICE);
 session_start(); //Do not remove this
-require_once 'class.image.php';
 
 //only assign a new timestamp if the session variable is empty
 if (!isset($_SESSION['random_key']) || strlen($_SESSION['random_key'])==0){
