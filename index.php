@@ -75,7 +75,7 @@ if (isset($_POST["upload"])) {
             //put the file ext in the session so we know what file to look for once its uploaded
             $_SESSION['user_file_ext']=".".$file_ext;
 
-            move_uploaded_file($userfile_tmp, $large_image_location);
+            copy($userfile_tmp, $large_image_location);
             chmod($large_image_location, 0777);
 
             $width = getWidth($large_image_location);
