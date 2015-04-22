@@ -62,7 +62,6 @@ if (isset($_POST["upload"])) {
 
     }else{
         $error= "Select an image for upload";
-        var_dump($_FILES['image']['error']);
     }
     //Everything is ok, so we can upload the image.
     if (strlen($error)==0){

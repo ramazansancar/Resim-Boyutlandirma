@@ -58,12 +58,11 @@ class ResimIslemleri
 
         $dosyaHatasi = $_FILES[$inputname]["error"]; // integer değer döner.
         if ($dosyaHatasi != 0) {
-            // echo "Dosya yüklemesinde bir hata oluştu";
-            return 2; // file upload sırasında bir hata
+            return array(false,2); // file upload sırasında bir hata
         } else {
             $boyut = $_FILES[$inputname]["size"];
             if ($boyut > ($maximum_dosya_boyutu)) {
-                return 3; // "Dosya boyutu belirtilen değerden daha büyük olamaz!";
+                return array(false,3); // "Dosya boyutu belirtilen değerden daha büyük olamaz!";
             } else {
                 $dosyaTipi = pathinfo($_FILES[$inputname]["name"]);
                 $dosyaTipi = $dosyaTipi['extension'];
@@ -80,17 +79,26 @@ class ResimIslemleri
                 if ($durum) {
                     $path = $_FILES[$inputname]["tmp_name"];
                     if (!getimagesize($_FILES[$inputname]["tmp_name"]) & is_executable($_FILES[$inputname]["tmp_name"])) {
-                        return 4; // Dosya resim değil
+                        return array(false,4); // Dosya resim değil
                     } else {
                         $ciktiYolu = $klasoryolu . "/" . $dosyaAdi . "." . $dosyaUzanti;
                         if (copy($path, $ciktiYolu)) {
-                            return $ciktiYolu; // dosya tek kopya halinde yüklendi
+                            if ($imageResize != false && is_array($imageResize)) {
+                                $resize = ResimIslemleri::imageResize($ciktiYolu,$dosyaAdi,$imageResize);
+                                if ($resize[0] == true) {
+                                    return array(true, $ciktiYolu);
+                                } else {
+                                    return array(false, 5); // resize hatası
+                                }
+                            } else {
+                                return array(true, $ciktiYolu); // dosya tek kopya halinde yüklendi
+                            }
                         } else {
-                            return 6; // copy fonksiyonu hatası
+                            return array(false,6); // copy fonksiyonu hatası
                         }
                     }
                 } else {
-                    return 7; // "İzin verilmeyen dosya türü
+                    return array(false,7); // "İzin verilmeyen dosya türü
                 }
             }
         }
@@ -107,7 +115,7 @@ class ResimIslemleri
         list ($genislik, $yukseklik) = getimagesize($dosyaYolu);
         $oran = $yukseklik / $genislik;
         if ($oran > 3 & $oran < 1 / 3) {
-            return false; // logo istedik ulan banner değil! gibi birşey diyebiliriz burada :)
+            return array(false,2); // logo istedik ulan banner değil! gibi birşey diyebiliriz burada :)
         } else {
             $obj = new static();
             $SimpleImage = $obj->SimpleImage;
@@ -118,7 +126,7 @@ class ResimIslemleri
                 $SimpleImage->resizeToWidth($istenenGenislikler[$i]);
                 $SimpleImage->save($ciktiIsım . "_" . $istenenGenislikler[$i] . ".$dosyaTipi");
             }
-            return $dosyaYolu;
+            return array(true,$dosyaYolu);
         }
     }
 }
