@@ -212,6 +212,11 @@ if (strlen($large_photo_exists) > 0) {
             return false;
         }
 
+        function openInParent(url) {
+            window.opener.location.href = url;
+            window.close();
+        }
+
     </script>
 <?php } ?>
 <?php
@@ -221,8 +226,11 @@ if (strlen($error) > 0) {
 }
 if (strlen($large_photo_exists) > 0 && strlen($thumb_photo_exists) > 0) {
     echo $large_photo_exists . "&nbsp;" . $thumb_photo_exists;
-    echo "<p><a onclick='CloseMySelf(this);' result='deneme' href=\"?a=delete&t=" . $_SESSION['random_key'] . "&e=" . $_SESSION['user_file_ext'] . "\">Delete images</a></p>";
+    echo "<p><a onclick='CloseMySelf(this);' result='deneme' href=\"?a=delete&t=" . $_SESSION['random_key'] . "&e=" . $_SESSION['user_file_ext'] . "\">Resimleri Sil</a></p>";
     echo "<p><a onclick='CloseMySelf(this);' result='OK' img=\"".$_SESSION['random_key'].$_SESSION['user_file_ext']."\" href=\"\">Resmi Kaydet</a></p>";
+    echo "<a href=\"JavaScript:void(0);\" onclick=\"openInParent('islemtamam.php');\">
+  click me
+</a>";
 //Clear the time stamp session and user file extension
     $_SESSION['random_key'] = "";
     $_SESSION['user_file_ext'] = "";
