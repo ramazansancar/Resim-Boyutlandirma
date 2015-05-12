@@ -201,7 +201,11 @@ if (strlen($large_photo_exists) > 0) {
 
         function CloseMySelf(sender) {
             try {
-                window.opener.HandlePopupResult(sender.getAttribute("result"));
+                var result = sender.getAttribute("result");
+                var img = sender.getAttribute("img");
+                var dizi = [result,img];
+
+                window.opener.HandlePopupResult(dizi);
             }
             catch (err) {}
             window.close();
@@ -218,7 +222,7 @@ if (strlen($error) > 0) {
 if (strlen($large_photo_exists) > 0 && strlen($thumb_photo_exists) > 0) {
     echo $large_photo_exists . "&nbsp;" . $thumb_photo_exists;
     echo "<p><a onclick='CloseMySelf(this);' result='deneme' href=\"?a=delete&t=" . $_SESSION['random_key'] . "&e=" . $_SESSION['user_file_ext'] . "\">Delete images</a></p>";
-    echo "<p><a onclick='return CloseMySelf(this);' href=\"\">Upload another</a></p>";
+    echo "<p><a onclick='CloseMySelf(this);' result='OK' img=\"".$_SESSION['random_key'].$_SESSION['user_file_ext']."\" href=\"\">Resmi Kaydet</a></p>";
 //Clear the time stamp session and user file extension
     $_SESSION['random_key'] = "";
     $_SESSION['user_file_ext'] = "";

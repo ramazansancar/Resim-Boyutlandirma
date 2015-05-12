@@ -23,12 +23,6 @@
     function HandlePopupResult(result) {
         if (result != null) {
             alert("result of popup is: " + result);
-
-            var form = document.getElementById("imageCrop");
-            var elements = form.elements;
-            for (var i = 0, len = elements.length; i < len; ++i) {
-                elements[i].disabled = false;
-            }
         } else {
         }
     }
