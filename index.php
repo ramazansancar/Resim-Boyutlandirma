@@ -17,7 +17,7 @@ require_once 'class.image.php';
     <script type="text/javascript" src="js/jquery-pack.js"></script>
     <script type="text/javascript" src="js/jquery.imgareaselect.min.js"></script>
 </head>
-<body>
+<body onunload="kapat()">
 <?php
 
 //Check to see if any images with the same name already exist
@@ -99,6 +99,7 @@ if (isset($_POST["upload"])) {
 }
 
 if (isset($_POST["upload_thumbnail"]) && strlen($large_photo_exists) > 0) {
+    $_SESSION["tekin"]["thumbnail"] = true;
     //Get the new coordinates to crop the image.
     $x1 = $_POST["x1"];
     $y1 = $_POST["y1"];
@@ -107,7 +108,6 @@ if (isset($_POST["upload_thumbnail"]) && strlen($large_photo_exists) > 0) {
     $w = $_POST["w"];
     $h = $_POST["h"];
 
-    var_dump($_POST);
     //Scale the image to the thumb_width set above
     $scale = $thumb_width / $w;
     $cropped = resizeThumbnailImage($upload_path . $thumb_image_name . "_" . $thumb_width . $_SESSION['user_file_ext'], $large_image_location, $w, $h, $x1, $y1, $scale);
@@ -203,11 +203,12 @@ if (strlen($large_photo_exists) > 0) {
             try {
                 var result = sender.getAttribute("result");
                 var img = sender.getAttribute("img");
-                var dizi = [result,img];
+                var dizi = [result, img];
 
                 window.opener.HandlePopupResult(dizi);
             }
-            catch (err) {}
+            catch (err) {
+            }
             window.close();
             return false;
         }
@@ -216,6 +217,18 @@ if (strlen($large_photo_exists) > 0) {
             window.opener.location.href = url;
             window.close();
         }
+
+        function formVerisiniAl() {
+            var deger = opener.document.photo.image.value;
+            alert(deger);
+        }
+
+
+        /*
+         window.onbeforeunload(function () {
+         return "Eğer bu pencereyi kapatırsanız resim kırpma işleminiz iptal edilecek ve yüklenen resimleriniz silinecektir!";
+         });
+         */
 
     </script>
 <?php } ?>
@@ -226,8 +239,8 @@ if (strlen($error) > 0) {
 }
 if (strlen($large_photo_exists) > 0 && strlen($thumb_photo_exists) > 0) {
     echo $large_photo_exists . "&nbsp;" . $thumb_photo_exists;
-    echo "<p><a onclick='CloseMySelf(this);' result='deneme' href=\"?a=delete&t=" . $_SESSION['random_key'] . "&e=" . $_SESSION['user_file_ext'] . "\">Resimleri Sil</a></p>";
-    echo "<p><a onclick='CloseMySelf(this);' result='OK' img=\"".$_SESSION['random_key'].$_SESSION['user_file_ext']."\" href=\"\">Resmi Kaydet</a></p>";
+    echo "<p><a onclick='CloseMySelf(this);' result='DEL' img=\"\" href=\"?a=delete&t=" . $_SESSION['random_key'] . "&e=" . $_SESSION['user_file_ext'] . "\">Resimleri Sil</a></p>";
+    echo "<p><a onclick='CloseMySelf(this);' result='OK' img=\"" . $_SESSION['random_key'] . $_SESSION['user_file_ext'] . "\" href=\"\">Resmi Kaydet</a></p>";
     echo "<a href=\"JavaScript:void(0);\" onclick=\"openInParent('islemtamam.php');\">
   click me
 </a>";
@@ -239,9 +252,11 @@ if (strlen($large_photo_exists) > 0 && strlen($thumb_photo_exists) > 0) {
         ?>
         <h2>Create Thumbnail</h2>
         <div align="center">
-            <img src="<?php echo $upload_path . $large_image_name . $_SESSION['user_file_ext']; ?>" style="float: left; margin-right: 10px;" id="thumbnail" alt="Create Thumbnail"/>
+            <img src="<?php echo $upload_path . $large_image_name . $_SESSION['user_file_ext']; ?>"
+                 style="float: left; margin-right: 10px;" id="thumbnail" alt="Create Thumbnail"/>
 
-            <div style="border:1px #e5e5e5 solid; float:left; position:relative; overflow:hidden; width:<?php echo $thumb_width; ?>px; height:<?php echo $thumb_height; ?>px;">
+            <div
+                style="border:1px #e5e5e5 solid; float:left; position:relative; overflow:hidden; width:<?php echo $thumb_width; ?>px; height:<?php echo $thumb_height; ?>px;">
                 <img src="<?php echo $upload_path . $large_image_name . $_SESSION['user_file_ext']; ?>"
                      style="position: relative;" alt="Thumbnail Preview"/>
             </div>
@@ -254,7 +269,8 @@ if (strlen($large_photo_exists) > 0 && strlen($thumb_photo_exists) > 0) {
                 <input type="hidden" name="y2" value="" id="y2"/>
                 <input type="hidden" name="w" value="" id="w"/>
                 <input type="hidden" name="h" value="" id="h"/>
-                <input type="submit" name="upload_thumbnail" value="Save Thumbnail" id="save_thumb"/>
+                <input type="submit" name="upload_thumbnail" value="Save Thumbnail" id="save_thumb"
+                       onclick="eventSil();"/>
             </form>
         </div>
         <hr/>

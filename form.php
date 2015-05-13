@@ -1,3 +1,9 @@
+<?php session_start();
+
+if (isset($_SESSION["tekin"])) {
+    var_dump($_SESSION["tekin"]);
+}
+?>
 <html>
 <head>
     <title>Birşeyler Birşeyler..</title>
@@ -5,25 +11,18 @@
 <body>
 <script>
     function target_popup(form) {
-
         window.open('', 'formpopup', 'width=950,height=900,resizeable,scrollbars');
         form.target = 'formpopup';
-
-        $('input[type="submit"]').disable();
-    }
-
-    function formDisable(formId) {
-        var form = document.getElementById(formId);
-        var elements = form.elements;
-        for (var i = 0, len = elements.length; i < len; ++i) {
-            elements[i].disabled = true;
-        }
     }
 
     function HandlePopupResult(result) {
         if (result != null) {
-            alert("result of popup is: " + result);
-        } else {
+            if (result[0] == "OK" && result[1] != "") {
+                alert("başarılı");
+                document.getElementById("hidden").innerHTML = '<input type="hidden" name="croppedImage" value="' + result[1] + '">';
+                document.getElementById('imageCrop').action = "islemtamam.php";
+                document.getElementById("imageCrop").style.visibility = "hidden";
+            }
         }
     }
 
@@ -33,6 +32,13 @@
       action="<?php echo "index.php"; ?>"
       method="post">
     <input type="file" name="image" size="30"/> <input type="submit" name="upload" value="Upload"/>
+    <!-- burada veri geldiği zaman farklı bir formu sabmit eden button ile değişecek !-->
+</form>
+<form id="hiddenForm" method="post" action="islemtamam.php" style="display: none;">
+    <div id="hidden">
+
+    </div>
+    <input type="submit" value="Formu Gönder">
 </form>
 </body>
 </html>
