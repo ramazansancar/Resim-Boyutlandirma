@@ -7,6 +7,7 @@ require_once 'SimpleImage.php';
 require_once 'class.image.php';
 
 
+
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN""http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -17,7 +18,7 @@ require_once 'class.image.php';
     <script type="text/javascript" src="js/jquery-pack.js"></script>
     <script type="text/javascript" src="js/jquery.imgareaselect.min.js"></script>
 </head>
-<body onunload="kapat()">
+<body>
 <?php
 
 //Check to see if any images with the same name already exist
@@ -34,6 +35,18 @@ if (file_exists($large_image_location)) {
 }
 
 if (isset($_POST["upload"])) {
+
+    if (isset($_SESSION["cropped"])) {
+        unlink($_SESSION["cropped"][0]["dir"] . $_SESSION["cropped"][0]["org"] . $_SESSION["cropped"][0]["ext"]);
+        if ($_SESSION["cropped"][0]["thumbnail"] == true) {
+            unlink($_SESSION["cropped"][0]["dir"] . $_SESSION["cropped"][0]["org"] . "_" . $_SESSION["thumb_width"] . $_SESSION["cropped"][0]["ext"]);
+            unlink($_SESSION["cropped"][0]["dir"] . $_SESSION["cropped"][0]["org"] . "_" . $_SESSION["thumb_width2"] . $_SESSION["cropped"][0]["ext"]);
+            unlink($_SESSION["cropped"][0]["dir"] . $_SESSION["cropped"][0]["org"] . "_" . $_SESSION["thumb_width3"] . $_SESSION["cropped"][0]["ext"]);
+            $_SESSION["cropped"][0]["thumbnail"] == false;
+        }
+    }
+    $_SESSION["Index"] = 0;
+
     //Get the file information
     $userfile_name = $_FILES['image']['name'];
     $userfile_tmp = $_FILES['image']['tmp_name'];
@@ -68,8 +81,8 @@ if (isset($_POST["upload"])) {
 
         if (isset($_FILES['image']['name'])) {
             //this file could now has an unknown file extension (we hope it's one of the ones set above!)
-            $large_image_location = $large_image_location . "." . $file_ext;
-            $thumb_image_location = $thumb_image_location . "." . $file_ext;
+            $large_image_location = $upload_path . $large_image_name . "." . $file_ext;
+            $thumb_image_location = $upload_path . $thumb_image_name . "_" . $thumb_width . "." . $file_ext;
 
             //put the file ext in the session so we know what file to look for once its uploaded
             $_SESSION['user_file_ext'] = "." . $file_ext;
@@ -92,14 +105,24 @@ if (isset($_POST["upload"])) {
                 unlink($thumb_image_location);
             }
         }
+
+        $_SESSION["cropped"][$_SESSION["Index"]]["thumbnail"] = false;
+        $_SESSION["cropped"][$_SESSION["Index"]]["dir"] = $upload_dir . "/";
+        $_SESSION["cropped"][$_SESSION["Index"]]["org"] = idEncode($_SESSION["sirketId"]) . "_" . $_SESSION['random_key'];
+        $_SESSION["cropped"][$_SESSION["Index"]]["ext"] = $_SESSION["user_file_ext"];
+
         //Refresh the page to show the new uploaded image
+        $_SESSION["sifirla"] = true;
         header("location:index.php");
         exit();
     }
 }
 
 if (isset($_POST["upload_thumbnail"]) && strlen($large_photo_exists) > 0) {
-    $_SESSION["tekin"]["thumbnail"] = true;
+
+    $_SESSION["sifirla"] = false;
+    $_SESSION["cropped"][$_SESSION["Index"]]["thumbnail"] = true;
+
     //Get the new coordinates to crop the image.
     $x1 = $_POST["x1"];
     $y1 = $_POST["y1"];
@@ -143,7 +166,9 @@ if ($_GET['a'] == "delete" && strlen($_GET['t']) > 0 && strlen($_GET['e']) > 0) 
         unlink($thumb_image_location3);
     }
 
-    header("location:form.php");
+    unset($_SESSION["cropped"]);
+
+    //header("location:form.php");
     exit();
 }
 
@@ -203,7 +228,8 @@ if (strlen($large_photo_exists) > 0) {
             try {
                 var result = sender.getAttribute("result");
                 var img = sender.getAttribute("img");
-                var dizi = [result, img];
+                var ext = sender.getAttribute("ext");
+                var dizi = [result, img, ext];
 
                 window.opener.HandlePopupResult(dizi);
             }
@@ -216,11 +242,6 @@ if (strlen($large_photo_exists) > 0) {
         function openInParent(url) {
             window.opener.location.href = url;
             window.close();
-        }
-
-        function formVerisiniAl() {
-            var deger = opener.document.photo.image.value;
-            alert(deger);
         }
 
 
@@ -238,9 +259,13 @@ if (strlen($error) > 0) {
     echo "<ul><li><strong>Error!</strong></li><li>" . $error . "</li></ul>";
 }
 if (strlen($large_photo_exists) > 0 && strlen($thumb_photo_exists) > 0) {
+    $_SESSION["cropped"][$_SESSION["Index"]]["dir"] = $upload_dir . "/";
+    $_SESSION["cropped"][$_SESSION["Index"]]["org"] = idEncode($_SESSION["sirketId"]) . "_" . $_SESSION['random_key'];
+    $_SESSION["cropped"][$_SESSION["Index"]]["ext"] = $_SESSION["user_file_ext"];
+
     echo $large_photo_exists . "&nbsp;" . $thumb_photo_exists;
     echo "<p><a onclick='CloseMySelf(this);' result='DEL' img=\"\" href=\"?a=delete&t=" . $_SESSION['random_key'] . "&e=" . $_SESSION['user_file_ext'] . "\">Resimleri Sil</a></p>";
-    echo "<p><a onclick='CloseMySelf(this);' result='OK' img=\"" . $_SESSION['random_key'] . $_SESSION['user_file_ext'] . "\" href=\"\">Resmi Kaydet</a></p>";
+    echo "<p><a onclick='CloseMySelf(this);' result='OK' img=\"" . $upload_dir . "/" . idEncode($_SESSION["sirketId"]) . "_" . $_SESSION['random_key'] . "\" ext=\"" . $_SESSION['user_file_ext'] . "\" href=\"\">Resmi Kaydet</a></p>";
     echo "<a href=\"JavaScript:void(0);\" onclick=\"openInParent('islemtamam.php');\">
   click me
 </a>";
@@ -248,7 +273,7 @@ if (strlen($large_photo_exists) > 0 && strlen($thumb_photo_exists) > 0) {
     $_SESSION['random_key'] = "";
     $_SESSION['user_file_ext'] = "";
 } else {
-    if (strlen($large_photo_exists) > 0) {
+    if (strlen($large_photo_exists) > 0 || $_SESSION["user_file_ext"] != "") {
         ?>
         <h2>Create Thumbnail</h2>
         <div align="center">
@@ -274,7 +299,11 @@ if (strlen($large_photo_exists) > 0 && strlen($thumb_photo_exists) > 0) {
             </form>
         </div>
         <hr/>
-    <?php } ?>
+    <?php
+    } else {
+        var_dump($_REQUEST);
+        var_dump($_SESSION);
+    } ?>
 <?php } ?>
 <!-- Copyright (c) 2008 http://www.webmotionuk.com -->
 </body>

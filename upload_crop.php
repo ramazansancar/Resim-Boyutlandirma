@@ -4,7 +4,7 @@ error_reporting (E_ALL ^ E_NOTICE);
 session_start(); //Do not remove this
 
 //only assign a new timestamp if the session variable is empty
-if (!isset($_SESSION['random_key']) || strlen($_SESSION['random_key'])==0){
+if ((!isset($_SESSION['random_key']) || strlen($_SESSION['random_key'])==0) || $_SESSION["sirila"] == true){
     $_SESSION['random_key'] = date("YmdHis"); //assign the timestamp to the session variable
 	$_SESSION['user_file_ext']= "";
 }
@@ -55,6 +55,10 @@ foreach ($allowed_image_ext as $mime_type => $ext) {
 if (! file_exists($upload_path)) {
 	mkdir($upload_path, 0777, true);
 }
+
+$_SESSION["thumb_width"] = $thumb_width;
+$_SESSION["thumb_width2"] = $thumb_width2;
+$_SESSION["thumb_width3"] = $thumb_width3;
 
 ##########################################################################################################
 # IMAGE FUNCTIONS																						 #
