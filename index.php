@@ -264,7 +264,7 @@ if (strlen($large_photo_exists) > 0 && strlen($thumb_photo_exists) > 0) {
     $_SESSION["cropped"][$_SESSION["Index"]]["ext"] = $_SESSION["user_file_ext"];
 
     echo $large_photo_exists . "&nbsp;" . $thumb_photo_exists;
-    echo "<p><a onclick='CloseMySelf(this);' result='DEL' img=\"\" href=\"?a=delete&t=" . $_SESSION['random_key'] . "&e=" . $_SESSION['user_file_ext'] . "\">Resimleri Sil</a></p>";
+    echo "<p><a onclick='CloseMySelf(this);' result='DEL' img=\"\" href=\"?a=delete&t=" . $_SESSION['random_key'] . "&e=" . $_SESSION['user_file_ext'] . "\" ext=\"\">Resimleri Sil</a></p>";
     echo "<p><a onclick='CloseMySelf(this);' result='OK' img=\"" . $upload_dir . "/" . idEncode($_SESSION["sirketId"]) . "_" . $_SESSION['random_key'] . "\" ext=\"" . $_SESSION['user_file_ext'] . "\" href=\"\">Resmi Kaydet</a></p>";
     echo "<a href=\"JavaScript:void(0);\" onclick=\"openInParent('islemtamam.php');\">
   click me
